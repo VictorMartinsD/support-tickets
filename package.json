@@ -1,0 +1,34 @@
+{
+  "name": "support-tickets",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": "Victor Martins Dias <victormartinsjob@gmail.com> (https://github.com/VictorMartinsD)",
+  "description": "API de gerenciamento de tickets de suporte",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "echo \"No tests configured\"",
+    "check": "npm run lint && prettier --check .",
+    "format": "prettier --write .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "latest"
+  }
+}
