@@ -1,154 +1,429 @@
-# API de Tickets de Suporte
+<h1 align="center">support-tickets</h1>
 
-> **Status: Em desenvolvimento**
->
-> Este projeto ainda está em desenvolvimento. A estrutura atualmente presente
-> no repositório é a casca inicial da API de tickets de suporte, e as rotas de
-> tickets ainda não foram implementadas.
+<div align="center">
 
-API para gerenciar tickets de suporte técnico. Na versão planejada, será
-possível criar tickets solicitando suporte, atualizar as informações dos
-tickets, listar tickets com filtro opcional por status, fechar tickets e
-excluir tickets.
+[![Product Specification](https://img.shields.io/badge/Product%20Specification-Documentation-0ea5e9?style=for-the-badge)](./docs/product-spec.md)
+[![📘 Notas de Estudo](https://img.shields.io/badge/%F0%9F%93%98%20Notas%20de%20Estudo-Documenta%C3%A7%C3%A3o-0ea5e9?style=for-the-badge)](./docs/study-notes.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://github.com/VictorMartinsD/support-tickets/blob/main/LICENSE)
 
-## API planejada
+</div>
 
-As rotas a seguir descrevem o comportamento pretendido para a API e poderão
-ser alteradas durante o desenvolvimento do projeto.
+<a name="sumario"></a>
 
-### Criar um ticket
+<div align="center">
 
-Cria um novo ticket de suporte.
+## Sumário | Summary
 
-**Método:** `POST`
-**URL:** `/tickets`
+| Português                                                                                                                                                                                                                                                                                                                                               | English                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Sobre o Projeto](#sobre-o-projeto)<br>[Visão de Produto](#visao-de-produto)<br>[Casos de Uso](#casos-de-uso)<br>[Funcionalidades](#funcionalidades)<br>[Tecnologias](#tecnologias)<br>[Arquitetura](#arquitetura)<br>[Como rodar localmente](#como-rodar-localmente)<br>[Limitações conhecidas](#limitacoes-conhecidas)<br>[Aprendizado](#aprendizado) | [About the Project](#about-the-project)<br>[Product Overview](#product-overview)<br>[Use Cases](#use-cases)<br>[Features](#features)<br>[Technologies](#technologies)<br>[Architecture](#architecture)<br>[Running Locally](#running-locally)<br>[Known Limitations](#known-limitations)<br>[Learnings](#learnings) |
 
-**Corpo da requisição (JSON):**
+</div>
 
-| Campo         | Tipo   | Obrigatório | Descrição                                 |
-| ------------- | ------ | ----------- | ----------------------------------------- |
-| `equipment`   | string | Sim         | Nome do equipamento, como um computador   |
-| `description` | string | Sim         | Descrição do problema                     |
-| `user_name`   | string | Sim         | Nome do usuário que está criando o ticket |
+<a name="sobre-o-projeto"></a>
 
-### Obter tickets
+## 📌 Sobre o Projeto
 
-Retorna todos os tickets de suporte.
+`support-tickets` é uma API para registrar e acompanhar solicitações de suporte técnico. O projeto mantém problemas, estados e soluções em registros consultáveis, apoiando o ciclo entre abertura, atualização, encerramento e remoção.
 
-**Método:** `GET`
-**URL:** `/tickets`
+O foco técnico está na construção de uma API HTTP modular com recursos nativos do Node.js, roteamento por método e caminho, controllers separados e persistência local em arquivo JSON.
 
-**Parâmetro de consulta opcional:**
+<a name="visao-de-produto"></a>
 
-- `status` (string): filtra os tickets pelos status `open` ou `closed`.
+## 🎯 Visão de Produto
 
-### Atualizar um ticket
+O produto centraliza solicitações de suporte em tickets com identificador, equipamento, descrição, nome do solicitante, estado e solução quando o atendimento é encerrado. O público principal são equipes pequenas de suporte técnico, profissionais que acompanham solicitações e estudantes que praticam esse fluxo.
 
-Atualiza as informações de um ticket específico. O nome do usuário não pode
-ser alterado por essa rota.
+O valor entregue é permitir consultar tickets abertos ou encerrados, corrigir dados operacionais e registrar a solução aplicada sem recriar a solicitação. Para regras de negócio e requisitos detalhados, consulte a [Especificação do Produto](./docs/product-spec.md).
 
-**Método:** `PUT`
-**URL:** `/tickets/:id`
+<a name="casos-de-uso"></a>
 
-**Parâmetro da rota:**
+## 📌 Casos de Uso
 
-- `id` (UUID): identificador do ticket.
+- Registrar uma solicitação de suporte para um equipamento com problema.
+- Consultar tickets em aberto para identificar atendimentos pendentes.
+- Filtrar solicitações encerradas para revisar soluções registradas.
+- Corrigir o equipamento ou a descrição de um ticket existente.
+- Encerrar um atendimento informando a solução aplicada.
+- Remover registros que não precisam mais permanecer disponíveis.
 
-**Corpo da requisição (JSON):**
+<a name="funcionalidades"></a>
 
-| Campo         | Tipo   | Obrigatório | Descrição                           |
-| ------------- | ------ | ----------- | ----------------------------------- |
-| `equipment`   | string | Sim         | Nome atualizado do equipamento      |
-| `description` | string | Sim         | Descrição atualizada do problema    |
-| `user_name`   | -      | -           | Não pode ser alterado por essa rota |
+## ✨ Funcionalidades
 
-### Fechar um ticket
+- Criar tickets com `equipment`, `description` e `user_name`.
+- Gerar identificador único e estado inicial `open`.
+- Listar tickets e filtrar por `status`.
+- Atualizar equipamento e descrição sem alterar o usuário de origem.
+- Encerrar tickets com estado `closed` e uma `solution`.
+- Remover tickets pelo identificador.
+- Persistir alterações no arquivo local de dados.
 
-Atualiza o status de um ticket para `closed`.
+<a name="tecnologias"></a>
 
-**Método:** `PATCH`
-**URL:** `/tickets/:id/status`
+## 🛠️ Tecnologias e Ferramentas
 
-**Parâmetro da rota:**
+### Core
 
-- `id` (UUID): identificador do ticket.
+| Tecnologia                | Versão | Função e impacto na arquitetura                                                                      |
+| ------------------------- | ------ | ---------------------------------------------------------------------------------------------------- |
+| **Node.js**               | 20+    | Executa a API e fornece módulos nativos para HTTP, sistema de arquivos e geração de identificadores. |
+| **JavaScript ES Modules** | Nativo | Organiza o projeto com `import` e `export`, separando rotas, controllers, middlewares e utilitários. |
 
-### Excluir um ticket
+### Infrastructure / API
 
-Exclui um ticket específico.
+| Tecnologia                | Versão | Função e impacto na arquitetura                                                 |
+| ------------------------- | ------ | ------------------------------------------------------------------------------- |
+| **Node.js `http`**        | Nativo | Cria o servidor HTTP sem framework externo e encaminha requisições ao roteador. |
+| **Node.js `fs/promises`** | Nativo | Persiste tickets em `src/database/db.json` por meio da camada `Database`.       |
+| **Node.js `crypto`**      | Nativo | Gera identificadores únicos para novos tickets com `randomUUID`.                |
 
-**Método:** `DELETE`
-**URL:** `/tickets/:id`
+### Tooling
 
-**Parâmetro da rota:**
+| Tecnologia      | Versão | Função e impacto na arquitetura                                             |
+| --------------- | ------ | --------------------------------------------------------------------------- |
+| **ESLint**      | 10.3.0 | Analisa os arquivos JavaScript e aplica regras de qualidade e consistência. |
+| **Prettier**    | 3.7.4  | Padroniza a formatação do código e da documentação.                         |
+| **Husky**       | 9.1.7  | Integra ações de qualidade ao ciclo de trabalho do Git.                     |
+| **lint-staged** | 16.2.7 | Define ações de lint e formatação para arquivos JavaScript alterados.       |
 
-- `id` (UUID): identificador do ticket.
+<a name="arquitetura"></a>
 
-## Casca atual do projeto
+## 🏗️ Arquitetura e Decisões Técnicas
 
-O repositório atualmente contém a configuração inicial da API Node.js:
+O projeto usa uma arquitetura modular organizada por responsabilidades. O servidor prepara a requisição com middlewares, o roteador identifica o controller e a camada de persistência concentra as operações sobre os dados.
 
-- Node.js com o módulo nativo `node:http`;
-- módulos ES;
-- ESLint e Prettier;
-- Husky e lint-staged;
-- um endpoint `GET /health` para uma verificação básica de disponibilidade.
+### Estrutura do projeto
 
-As rotas de tickets, as validações, a persistência dos dados e os testes
-automatizados serão adicionados conforme o desenvolvimento avançar.
+```text
+support-tickets/
+├── .editorconfig                        # Regras de edição
+├── .env.example                         # Modelo de variáveis de ambiente
+├── .gitattributes                       # Atributos do Git
+├── .gitignore                           # Arquivos ignorados
+├── .prettierignore                      # Exclusões do Prettier
+├── .prettierrc                          # Configuração do Prettier
+├── eslint.config.mjs                    # Configuração do ESLint
+├── GITHUB_METADATA.md                   # Metadados temporários do GitHub
+├── LICENSE                              # Licença MIT
+├── package.json                         # Metadados e scripts npm
+├── package-lock.json                    # Lockfile de dependências
+├── README.md                            # Documentação principal
+├── docs/
+│   ├── product-spec.md                  # Visão funcional do produto
+│   └── study-notes.md                   # Registro técnico de aprendizado
+└── src/
+    ├── server.js                        # Inicialização do servidor HTTP
+    ├── controllers/
+    │   └── tickets/
+    │       ├── create.js                # Criação de tickets
+    │       ├── index.js                 # Listagem e filtro
+    │       ├── remove.js                # Remoção de tickets
+    │       ├── update.js                # Atualização de dados
+    │       └── updateStatus.js          # Encerramento e solução
+    ├── database/
+    │   ├── database.js                  # Operações de persistência
+    │   └── db.json                      # Dados locais dos tickets
+    ├── middlewares/
+    │   ├── jsonHandler.js               # Leitura do corpo JSON
+    │   └── routeHandler.js              # Resolução de rotas
+    ├── routes/
+    │   ├── index.js                     # Registro das rotas
+    │   └── tickets.js                   # Rotas de tickets
+    └── utils/
+        ├── extractQueryParams.js        # Parsing de query string
+        └── parseRoutePath.js            # Parsing de parâmetros de rota
+```
 
-## Requisitos
+### Rotas disponíveis
 
-- Node.js 20 ou superior;
-- npm.
+| Método   | Caminho              | Responsabilidade                                          |
+| -------- | -------------------- | --------------------------------------------------------- |
+| `POST`   | `/tickets`           | Cria um ticket.                                           |
+| `GET`    | `/tickets`           | Lista tickets; aceita `?status=open` ou `?status=closed`. |
+| `PUT`    | `/tickets/:id`       | Atualiza equipamento e descrição.                         |
+| `PATCH`  | `/tickets/:id/close` | Fecha o ticket e registra a solução.                      |
+| `DELETE` | `/tickets/:id`       | Remove o ticket.                                          |
 
-## Como começar
+### Decisões técnicas relevantes
 
-Instale as dependências:
+- Usar módulos nativos mantém o escopo da API explícito e reduz abstrações externas.
+- Definir rotas como dados separa o registro dos endpoints da execução dos controllers.
+- Usar expressões regulares permite extrair parâmetros dinâmicos e query strings sem um framework de roteamento.
+- Encapsular a persistência em `Database` evita distribuir operações de leitura e escrita pelos controllers.
+- Separar cada operação de ticket em um controller mantém responsabilidades menores e mais legíveis.
+
+<a name="como-rodar-localmente"></a>
+
+## 🚀 Como rodar o projeto localmente
+
+1. Clone o repositório:
+
+```bash
+git clone https://github.com/VictorMartinsD/support-tickets.git
+```
+
+2. Entre no diretório do projeto:
+
+```bash
+cd support-tickets
+```
+
+3. Instale as dependências:
 
 ```bash
 npm ci
 ```
 
-Inicie a API em modo de desenvolvimento:
+4. Inicie o servidor em modo de desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-Por padrão, o servidor será executado em `http://localhost:3333`. Para usar
-outra porta, defina a variável de ambiente `PORT` antes de iniciar a
-aplicação.
+A API será iniciada na porta `3333`.
 
-PowerShell:
+### Scripts disponíveis
 
-```powershell
-$env:PORT = "3333"
+| Script             | Finalidade                                        |
+| ------------------ | ------------------------------------------------- |
+| `npm run dev`      | Inicia o servidor com reinicialização automática. |
+| `npm start`        | Inicia o servidor sem modo de observação.         |
+| `npm run lint`     | Executa o ESLint.                                 |
+| `npm run lint:fix` | Executa o ESLint com correções automáticas.       |
+| `npm run check`    | Executa lint e verifica a formatação.             |
+| `npm run format`   | Formata os arquivos com Prettier.                 |
+| `npm test`         | Indica que ainda não há testes configurados.      |
+
+<a name="limitacoes-conhecidas"></a>
+
+## ⚠️ Limitações Conhecidas
+
+- Não há autenticação ou autorização.
+- Não há validação de campos obrigatórios ou formatos de entrada.
+- Não há mensagens específicas para tickets inexistentes ou operações inválidas.
+- Não há testes automatizados configurados.
+- A persistência é local e baseada em arquivo JSON.
+- Não há paginação, ordenação, busca textual ou notificações.
+- Não há interface visual própria.
+
+<a name="aprendizado"></a>
+
+## 📚 Aprendizado
+
+O desenvolvimento reforçou a criação de um servidor HTTP com recursos nativos, o tratamento de streams JSON, o roteamento com parâmetros dinâmicos e a separação entre middlewares, rotas, controllers e persistência.
+
+Também consolidou decisões de modelagem para criação, consulta, atualização, encerramento e remoção de registros, além do uso de ESLint, Prettier e scripts npm para manter o fluxo de desenvolvimento consistente. Para o registro técnico completo, consulte as [Notas de Estudo](./docs/study-notes.md).
+
+---
+
+— Desenvolvido por [Victor Martins](https://github.com/VictorMartinsD), Front-End Developer focado em aplicações web modernas e performance.
+
+---
+
+<div align="center">
+
+## ENGLISH VERSION
+
+</div>
+
+<h1 align="center">support-tickets</h1>
+
+<a name="about-the-project"></a>
+
+## 📌 About the Project
+
+`support-tickets` is an API for recording and tracking technical support requests. It keeps problems, states, and solutions in queryable records, supporting a basic lifecycle from creation to update, closure, and removal.
+
+The technical focus is a modular HTTP API built with native Node.js capabilities, method and path routing, separated controllers, and local JSON file persistence.
+
+<a name="product-overview"></a>
+
+## 🎯 Product Overview
+
+The product centralizes support requests in tickets containing an identifier, equipment, description, requester name, state, and a solution when the interaction is closed. Its main audience is small technical support teams, professionals tracking requests, and students practicing this workflow.
+
+The delivered value is the ability to view open or closed tickets, correct operational data, and record the applied solution without recreating the request. For detailed business rules and requirements, see the [Product Specification](./docs/product-spec.md).
+
+<a name="use-cases"></a>
+
+## 📌 Use Cases
+
+- Record a support request for equipment with a problem.
+- View open tickets to identify pending interactions.
+- Filter closed requests to review recorded solutions.
+- Correct the equipment or description of an existing ticket.
+- Close an interaction while recording the applied solution.
+- Remove records that no longer need to remain available.
+
+<a name="features"></a>
+
+## ✨ Features
+
+- Create tickets with `equipment`, `description`, and `user_name`.
+- Generate a unique identifier and the initial `open` state.
+- List tickets and filter them by `status`.
+- Update equipment and description without changing the original requester.
+- Close tickets with the `closed` state and a `solution`.
+- Remove tickets by identifier.
+- Persist changes in the local data file.
+
+<a name="technologies"></a>
+
+## 🛠️ Technologies and Tools
+
+### Core
+
+| Technology                | Version | Role and architectural impact                                                                                |
+| ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| **Node.js**               | 20+     | Runs the API and provides native modules for HTTP, file system access, and identifier generation.            |
+| **JavaScript ES Modules** | Native  | Organizes the project with `import` and `export`, separating routes, controllers, middleware, and utilities. |
+
+### Infrastructure / API
+
+| Technology                | Version | Role and architectural impact                                                              |
+| ------------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| **Node.js `http`**        | Native  | Creates the HTTP server without an external framework and forwards requests to the router. |
+| **Node.js `fs/promises`** | Native  | Persists tickets in `src/database/db.json` through the `Database` layer.                   |
+| **Node.js `crypto`**      | Native  | Generates unique identifiers for new tickets with `randomUUID`.                            |
+
+### Tooling
+
+| Technology      | Version | Role and architectural impact                                         |
+| --------------- | ------- | --------------------------------------------------------------------- |
+| **ESLint**      | 10.3.0  | Analyzes JavaScript files and enforces quality and consistency rules. |
+| **Prettier**    | 3.7.4   | Standardizes code and documentation formatting.                       |
+| **Husky**       | 9.1.7   | Integrates quality actions into the Git workflow.                     |
+| **lint-staged** | 16.2.7  | Defines linting and formatting actions for changed JavaScript files.  |
+
+<a name="architecture"></a>
+
+## 🏗️ Architecture and Technical Decisions
+
+The project uses a modular architecture organized by responsibility. The server prepares requests through middleware, the router identifies the controller, and the persistence layer concentrates data operations.
+
+### Project structure
+
+```text
+support-tickets/
+├── .editorconfig                       # Editor rules
+├── .env.example                        # Environment variable template
+├── .gitattributes                      # Git attributes
+├── .gitignore                          # Ignored files
+├── .prettierignore                     # Prettier exclusions
+├── .prettierrc                         # Prettier configuration
+├── eslint.config.mjs                   # ESLint configuration
+├── GITHUB_METADATA.md                  # Temporary GitHub metadata
+├── LICENSE                             # MIT License
+├── package.json                        # npm metadata and scripts
+├── package-lock.json                   # Dependency lockfile
+├── README.md                           # Main documentation
+├── docs/
+│   ├── product-spec.md                 # Product functional vision
+│   └── study-notes.md                  # Technical learning record
+└── src/
+    ├── server.js                       # HTTP server initialization
+    ├── controllers/
+    │   └── tickets/
+    │       ├── create.js               # Ticket creation
+    │       ├── index.js                # Listing and filtering
+    │       ├── remove.js               # Ticket removal
+    │       ├── update.js               # Data update
+    │       └── updateStatus.js         # Closure and solution
+    ├── database/
+    │   ├── database.js                 # Persistence operations
+    │   └── db.json                     # Local ticket data
+    ├── middlewares/
+    │   ├── jsonHandler.js              # JSON body parsing
+    │   └── routeHandler.js             # Route resolution
+    ├── routes/
+    │   ├── index.js                    # Route registration
+    │   └── tickets.js                  # Ticket routes
+    └── utils/
+        ├── extractQueryParams.js       # Query string parsing
+        └── parseRoutePath.js           # Route parameter parsing
+```
+
+### Available routes
+
+| Method   | Path                 | Responsibility                                             |
+| -------- | -------------------- | ---------------------------------------------------------- |
+| `POST`   | `/tickets`           | Creates a ticket.                                          |
+| `GET`    | `/tickets`           | Lists tickets; accepts `?status=open` or `?status=closed`. |
+| `PUT`    | `/tickets/:id`       | Updates equipment and description.                         |
+| `PATCH`  | `/tickets/:id/close` | Closes the ticket and records the solution.                |
+| `DELETE` | `/tickets/:id`       | Removes the ticket.                                        |
+
+### Relevant technical decisions
+
+- Native modules keep the API scope explicit and reduce external abstractions.
+- Defining routes as data separates endpoint registration from controller execution.
+- Regular expressions extract dynamic parameters and query strings without a routing framework.
+- Encapsulating persistence in `Database` keeps read and write operations out of controllers.
+- Separating each ticket operation into a controller keeps responsibilities smaller and more readable.
+
+<a name="running-locally"></a>
+
+## 🚀 Running the project locally
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/VictorMartinsD/support-tickets.git
+```
+
+2. Enter the project directory:
+
+```bash
+cd support-tickets
+```
+
+3. Install dependencies:
+
+```bash
+npm ci
+```
+
+4. Start the development server:
+
+```bash
 npm run dev
 ```
 
-Bash:
+The API starts on port `3333`.
 
-```bash
-PORT=3333 npm run dev
-```
+### Available scripts
 
-## Comandos disponíveis
+| Script             | Purpose                                              |
+| ------------------ | ---------------------------------------------------- |
+| `npm run dev`      | Starts the server with automatic restarts.           |
+| `npm start`        | Starts the server without watch mode.                |
+| `npm run lint`     | Runs ESLint.                                         |
+| `npm run lint:fix` | Runs ESLint with automatic fixes.                    |
+| `npm run check`    | Runs linting and checks formatting.                  |
+| `npm run format`   | Formats files with Prettier.                         |
+| `npm test`         | Reports that automated tests are not configured yet. |
 
-| Comando            | Descrição                                                      |
-| ------------------ | -------------------------------------------------------------- |
-| `npm run dev`      | Inicia a API com o modo de observação do Node.js.              |
-| `npm start`        | Inicia a API sem o modo de observação.                         |
-| `npm run lint`     | Verifica os arquivos JavaScript com o ESLint.                  |
-| `npm run lint:fix` | Corrige problemas do ESLint com correção segura.               |
-| `npm run check`    | Executa o ESLint e verifica a formatação com o Prettier.       |
-| `npm run format`   | Formata o projeto com o Prettier.                              |
-| `npm test`         | Placeholder até que os testes automatizados sejam adicionados. |
+<a name="known-limitations"></a>
 
-## Licença
+## ⚠️ Known Limitations
 
-MIT. Consulte o arquivo [LICENSE](LICENSE).
+- There is no authentication or authorization.
+- Required fields and input formats are not validated.
+- There are no specific messages for missing tickets or invalid operations.
+- Automated tests are not configured.
+- Persistence is local and based on a JSON file.
+- There is no pagination, sorting, text search, or notification system.
+- There is no dedicated visual interface.
 
-## Créditos
+<a name="learnings"></a>
 
-Desenvolvido por [Victor Martins Dias](https://github.com/VictorMartinsD).
+## 📚 Learnings
+
+Development reinforced building an HTTP server with native capabilities, handling JSON streams, routing dynamic parameters, and separating middleware, routes, controllers, and persistence.
+
+It also consolidated modeling decisions for creating, querying, updating, closing, and removing records, along with using ESLint, Prettier, and npm scripts to keep the workflow consistent. For the complete technical record, see the [Study Notes](./docs/study-notes.md).
+
+---
+
+— Developed by [Victor Martins](https://github.com/VictorMartinsD), Front-End Developer focused on modern web applications and performance.
